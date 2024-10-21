@@ -9,12 +9,13 @@ func main() {
 	newRandStream := func(done <-chan struct{}) <-chan int {
 		randStream := make(chan int)
 		go func() {
-			defer fmt.Println("newRandStream closure exited.")
 			defer close(randStream)
+			defer fmt.Println("newRandStream closure exited.")
 			for {
 				select {
 				case randStream <- rand.Int():
 				case <-done:
+					fmt.Println("going to break")
 					return
 				}
 			}
