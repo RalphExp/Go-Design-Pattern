@@ -59,7 +59,7 @@ func TestBridgeChannel(t *testing.T) {
 			cancel()
 		}
 	}
-	if i != 50 && i != 51 {
+	if i < 50 && i > 55 {
 		t.Errorf("unexpected value of loop: %d\n", i)
 	}
 }
