@@ -1,7 +1,9 @@
 package main
 
+import "context"
+
 func repeat(
-	done <-chan interface{},
+	ctx context.Context,
 	values ...interface{},
 ) <-chan interface{} {
 	valueStream := make(chan interface{})
@@ -10,7 +12,7 @@ func repeat(
 		for {
 			for _, v := range values {
 				select {
-				case <-done:
+				case <-ctx.Done():
 					return
 				case valueStream <- v:
 				}
@@ -21,7 +23,7 @@ func repeat(
 }
 
 func take(
-	done <-chan interface{},
+	ctx context.Context,
 	valueStream <-chan interface{},
 	num int,
 ) <-chan interface{} {
@@ -30,7 +32,7 @@ func take(
 		defer close(takeStream)
 		for i := 0; i < num; i++ {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case takeStream <- <-valueStream:
 			}
@@ -40,7 +42,7 @@ func take(
 }
 
 func repeatFn(
-	done <-chan interface{},
+	ctx context.Context,
 	fn func() interface{},
 ) <-chan interface{} {
 	valueStream := make(chan interface{})
@@ -48,7 +50,7 @@ func repeatFn(
 		defer close(valueStream)
 		for {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case valueStream <- fn():
 			}
@@ -57,8 +59,30 @@ func repeatFn(
 	return valueStream
 }
 
+func pipe(
+	ctx context.Context,
+	src <-chan interface{},
+	fn func(arg interface{}) interface{},
+) <-chan interface{} {
+	valueStream := make(chan interface{})
+	go func() {
+		defer close(valueStream)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case data := <-src:
+				if v := fn(data); v != nil {
+					valueStream <- fn(v)
+				}
+			}
+		}
+	}()
+	return valueStream
+}
+
 func toString(
-	done <-chan interface{},
+	ctx context.Context,
 	valueStream <-chan interface{},
 ) <-chan string {
 	stringStream := make(chan string)
@@ -66,9 +90,27 @@ func toString(
 		defer close(stringStream)
 		for v := range valueStream {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case stringStream <- v.(string):
+			}
+		}
+	}()
+	return stringStream
+}
+
+func toInt(
+	ctx context.Context,
+	valueStream <-chan interface{},
+) <-chan int {
+	stringStream := make(chan int)
+	go func() {
+		defer close(stringStream)
+		for v := range valueStream {
+			select {
+			case <-ctx.Done():
+				return
+			case stringStream <- v.(int):
 			}
 		}
 	}()

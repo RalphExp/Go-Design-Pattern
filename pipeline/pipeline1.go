@@ -1,14 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"context"
+)
 
-func generator(done <-chan interface{}, integers ...int) <-chan int {
+func generator(ctx context.Context, integers ...int) <-chan int {
 	intStream := make(chan int)
 	go func() {
 		defer close(intStream)
 		for _, i := range integers {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case intStream <- i:
 			}
@@ -17,13 +19,13 @@ func generator(done <-chan interface{}, integers ...int) <-chan int {
 	return intStream
 }
 
-func multiply(done <-chan interface{}, intStream <-chan int, multiplier int) <-chan int {
+func multiply(ctx context.Context, intStream <-chan int, multiplier int) <-chan int {
 	multipliedStream := make(chan int)
 	go func() {
 		defer close(multipliedStream)
 		for i := range intStream {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case multipliedStream <- i * multiplier:
 			}
@@ -32,27 +34,17 @@ func multiply(done <-chan interface{}, intStream <-chan int, multiplier int) <-c
 	return multipliedStream
 }
 
-func add(done <-chan interface{}, intStream <-chan int, additive int) <-chan int {
+func add(ctx context.Context, intStream <-chan int, additive int) <-chan int {
 	addedStream := make(chan int)
 	go func() {
 		defer close(addedStream)
 		for i := range intStream {
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case addedStream <- i + additive:
 			}
 		}
 	}()
 	return addedStream
-}
-
-func main() {
-	done := make(chan interface{})
-	defer close(done)
-	intStream := generator(done, 1, 2, 3, 4)
-	pipeline := multiply(done, add(done, multiply(done, intStream, 2), 1), 2)
-	for v := range pipeline {
-		fmt.Println(v)
-	}
 }

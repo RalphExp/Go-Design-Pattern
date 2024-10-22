@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"testing"
 )
 
 func BenchmarkGeneric(b *testing.B) {
-	done := make(chan interface{})
-	defer close(done)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	b.ResetTimer()
-	for range toString(done, take(done, repeat(done, "a"), b.N)) {
+	for range toString(ctx, take(ctx, repeat(ctx, "a"), b.N)) {
 	}
 }
 
