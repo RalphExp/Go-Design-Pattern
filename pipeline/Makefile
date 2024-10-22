@@ -8,3 +8,5 @@ test_pipeline2:
 
 test_prime1:
 	go test -v pipeline2.go prime.go prime_test.go
+
+test: test_prime1 test_pipeline1
