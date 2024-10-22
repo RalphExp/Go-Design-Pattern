@@ -1,19 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"math/rand"
 	"os/exec"
 	"regexp"
 	"strconv"
 )
-
-func RandIntStream(ctx context.Context) <-chan interface{} {
-	return repeatFn(ctx, func() interface{} {
-		return rand.Intn(10000000000)
-	})
-}
 
 func checkPrime(arg interface{}) interface{} {
 	switch v := arg.(type) {
@@ -35,8 +27,4 @@ func checkPrime(arg interface{}) interface{} {
 		}
 	}
 	return nil
-}
-
-func PrimeFinder(ctx context.Context, src <-chan interface{}) <-chan interface{} {
-	return pipe(ctx, src, checkPrime)
 }

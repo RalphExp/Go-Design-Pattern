@@ -1,6 +1,9 @@
 package main
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 func repeat(
 	ctx context.Context,
@@ -115,4 +118,33 @@ func toInt(
 		}
 	}()
 	return stringStream
+}
+
+func fanIn(
+	ctx context.Context,
+	channels ...<-chan interface{},
+) <-chan interface{} {
+	var wg sync.WaitGroup
+	multiplexedStream := make(chan interface{})
+	multiplex := func(c <-chan interface{}) {
+		defer wg.Done()
+		for i := range c {
+			select {
+			case <-ctx.Done():
+				return
+			case multiplexedStream <- i:
+			}
+		}
+	}
+	// Select from all the channels
+	wg.Add(len(channels))
+	for _, c := range channels {
+		go multiplex(c)
+	}
+	// Wait for all the reads to complete
+	go func() {
+		wg.Wait()
+		close(multiplexedStream)
+	}()
+	return multiplexedStream
 }
