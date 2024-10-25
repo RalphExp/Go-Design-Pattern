@@ -21,7 +21,6 @@ func or(channels ...<-chan interface{}) <-chan interface{} {
 			case <-channels[0]:
 			case <-channels[1]:
 			case <-channels[2]:
-			// case <-create_or_channel(append(channels[3:], orDone)...):
 			case <-or(channels[3:]...):
 			}
 		}

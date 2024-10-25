@@ -4,7 +4,7 @@ import "context"
 
 func bridge(
 	ctx context.Context,
-	chanStream <-chan <-chan interface{},
+	chanStream <-chan<-chan interface{},
 ) <-chan interface{} {
 	valStream := make(chan interface{})
 	go func() {
