@@ -14,4 +14,9 @@ func TestFormat(t *testing.T) {
 	t.Log(Any(false))
 	t.Log(Any(make([]int, 10)))
 	t.Log(Any(func() {}))
+	t.Log(Any(struct{}{}))
+	t.Log(Any(struct {
+		A int
+		B int
+	}{}))
 }
