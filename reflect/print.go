@@ -11,6 +11,23 @@ func Any(value interface{}) string {
 	return formatAtom(reflect.ValueOf(value))
 }
 
+func formatStruct(v reflect.Value) (s string) {
+	s += "{"
+	if v.NumField() > 0 {
+		for i := range v.NumField() - 1 {
+			s += v.Type().Field(i).Name
+			s += ":"
+			s += formatAtom(v.Field(i))
+			s += ", "
+		}
+		s += v.Type().Field(v.NumField() - 1).Name
+		s += ":"
+		s += formatAtom(v.Field(v.NumField() - 1))
+	}
+	s += "}"
+	return s
+}
+
 func formatArray(v reflect.Value) (s string) {
 	// v is slice or array
 	s += "["
@@ -53,6 +70,8 @@ func formatAtom(v reflect.Value) string {
 			strconv.FormatUint(uint64(v.Pointer()), 16)
 	case reflect.Array, reflect.Slice:
 		return formatArray(v)
+	case reflect.Struct:
+		return formatStruct(v)
 	default: // reflect.Array, reflect.Struct, reflect.Interface
 		return v.Type().String() + " value"
 	}

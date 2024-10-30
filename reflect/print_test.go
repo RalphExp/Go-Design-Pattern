@@ -1,6 +1,8 @@
 package format
 
 import (
+	"os"
+	"reflect"
 	"regexp"
 	"testing"
 )
@@ -16,11 +18,11 @@ func TestFormat(t *testing.T) {
 		{make(map[string]int), "map\\[string\\]int 0x\\w+$"},
 		{true, "^true$"},
 		{false, "^false$"},
-		{struct{}{}, "^struct \\{\\} value$"},
+		{struct{}{}, "^\\{\\}$"},
 		{struct {
 			A int
 			B int
-		}{}, "^struct \\{ A int; B int \\} value$"},
+		}{}, "^\\{A:0, B:0\\}$"},
 		{func() {}, "^func\\(\\) 0x\\w+$"},
 	}
 
@@ -35,12 +37,53 @@ func TestFormat(t *testing.T) {
 }
 
 func TestDisplay(t *testing.T) {
-	Display("S", struct {
+	Display("Struct", struct {
 		A int
 		B int
 	}{A: 9, B: 22})
 
-	Display("A", [3]int{100, 200, 300})
-	Display("MSI", map[string]int{"A": 1, "B": 2, "C": 3})
-	Display("MAI", map[[3]int]int{{1, 2, 3}: 1, {2, 3, 4}: 2, {4, 5, 6}: 3})
+	Display("Array", [3]int{100, 200, 300})
+	Display("MapString", map[string]int{"A": 1, "B": 2, "C": 3})
+	Display("MapArray", map[[3]int]int{{1, 2, 3}: 1, {2, 3, 4}: 2, {4, 5, 6}: 3})
+	Display("MapArray", map[struct {
+		A int
+		B int
+	}]int{{A: 2, B: 3}: 0})
+
+	var i interface{} = 3
+	Display("i", i)
+	Display("&i", &i)
+
+	type Movie struct {
+		Title, Subtitle string
+		Year            int
+		Color           bool
+		Actor           map[string]string
+		Oscars          []string
+		Sequel          *string
+	}
+
+	strangelove := Movie{
+		Title:    "Dr. Strangelove",
+		Subtitle: "How I Learned to Stop Worrying and Love the Bomb",
+		Year:     1964,
+		Color:    false,
+		Actor: map[string]string{
+			"Dr. Strangelove":            "Peter Sellers",
+			"Grp. Capt. Lionel Mandrake": "Peter Sellers",
+			"Pres. Merkin Muffley":       "Peter Sellers",
+			"Gen. Buck Turgidson":        "George C. Scott",
+			"Brig. Gen. Jack D. Ripper":  "Sterling Hayden",
+			`Maj. T.J. "King" Kong`:      "Slim Pickens",
+		},
+		Oscars: []string{
+			"Best Actor (Nomin.)",
+			"Best Adapted Screenplay (Nomin.)",
+			"Best Director (Nomin.)",
+			"Best Picture (Nomin.)",
+		},
+	}
+	Display("strangelove", strangelove)
+	Display("os.Stderr", os.Stderr)
+	Display("rV", reflect.ValueOf(os.Stderr))
 }
